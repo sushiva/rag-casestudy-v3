@@ -1,227 +1,261 @@
 #!/usr/bin/env python3
 """
-RAG Application with Streamlit UI
-Supports Ollama (local) and cloud LLMs (OpenAI, Gemini, Claude)
+RAG Application v2 - Multi-Domain (Apple + Healthcare)
+Supports searching across multiple domains
 """
 
+# ============================================================
+# 1. PAGE CONFIG (FIRST!)
+# ============================================================
 import streamlit as st
-import sys
-import os
-import subprocess
-
-# Add utils to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'utils'))
-
-from retriever import Retriever
-from llm_handler import LLMHandler
-
-
-# ============================================================
-# INITIALIZATION FUNCTIONS
-# ============================================================
-
-def ensure_embeddings_exist():
-    """Generate embeddings if they don't exist"""
-    embedding_file = "data/embeddings.json"
-    chunks_file = "data/chunks.json"
-    
-    if not os.path.exists(embedding_file) and os.path.exists(chunks_file):
-        st.warning("⏳ Generating embeddings for first time... This may take 1-2 minutes")
-        try:
-            subprocess.run(["python", "scripts/generate_embeddings.py"], check=True)
-            st.success("✅ Embeddings generated!")
-        except Exception as e:
-            st.error(f"Error generating embeddings: {e}")
-
-
-@st.cache_resource
-def initialize_retriever():
-    """Initialize retriever once"""
-    return Retriever("config.yaml")
-
-
-# ============================================================
-# PAGE CONFIGURATION
-# ============================================================
 
 st.set_page_config(
-    page_title="RAG Assistant - Apple Organization",
+    page_title="RAG Assistant v2 - Multi-Domain",
     page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
-st.markdown("""
-    <style>
-    .main {
-        padding: 2rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# ============================================================
+# 2. IMPORTS (After set_page_config)
+# ============================================================
+import sys
+import os
+import numpy as np
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'utils'))
+
+from retriever import MultiDomainRetriever
 
 # ============================================================
-# MAIN APP
+# 3. INITIALIZATION FUNCTIONS
+# ============================================================
+
+def ensure_embeddings_exist():
+    """Check if embeddings exist"""
+    apple_emb = "data/apple/embeddings.json"
+    healthcare_emb = "data/healthcare/embeddings.json"
+    
+    if not os.path.exists(apple_emb):
+        st.warning("⚠️ Apple embeddings missing")
+        return False
+    if not os.path.exists(healthcare_emb):
+        st.warning("⚠️ Healthcare embeddings missing")
+        return False
+    
+    return True
+
+@st.cache_resource
+def initialize_retriever():
+    """Initialize multi-domain retriever"""
+    return MultiDomainRetriever()
+
+# ============================================================
+# 4. MAIN APP
 # ============================================================
 
 def main():
     """Main Streamlit app"""
     
-    # Ensure embeddings exist
-    ensure_embeddings_exist()
-    
-    st.title("🚀 RAG Assistant")
-    st.markdown("**Retrieval-Augmented Generation with PDF Knowledge Base**")
-    st.markdown("---")
-    
-    # Sidebar for LLM configuration
-    st.sidebar.title("⚙️ Configuration")
-    
-    llm_type = st.sidebar.selectbox(
-        "Select LLM Provider:",
-        ["Ollama (Local)", "OpenAI", "Google Gemini", "Claude"],
-        key="llm_type"
-    )
-    
-    # Map UI names to config names
-    llm_type_map = {
-        "Ollama (Local)": "ollama",
-        "OpenAI": "openai",
-        "Google Gemini": "gemini",
-        "Claude": "claude"
-    }
-    
-    llm_key = llm_type_map[llm_type]
-    api_key = None
-    
-    # Get API key if not Ollama
-    if llm_key != "ollama":
-        st.sidebar.markdown("### API Key")
-        api_key = st.sidebar.text_input(
-            f"Enter your {llm_type} API key:",
-            type="password"
-        )
-        
-        if not api_key:
-            st.sidebar.warning(f"⚠️ Please enter your {llm_type} API key")
-    
-    else:
-        st.sidebar.markdown("### Local LLM")
-        st.sidebar.info("✅ Using Ollama (running locally)")
-    
-    # Initialize retriever
-    try:
-        retriever = initialize_retriever()
-        st.sidebar.success("✅ Knowledge base loaded")
-    except Exception as e:
-        st.sidebar.error(f"❌ Error loading knowledge base: {str(e)}")
+    # Check embeddings
+    if not ensure_embeddings_exist():
+        st.error("❌ Embeddings not found. Please generate them first.")
         return
     
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### About")
-    st.sidebar.info(
-        "This RAG system answers questions based on an Apple organizational structure article."
+    st.title("🚀 RAG Assistant v2")
+    st.markdown("**Multi-Domain Search: Select a domain to get started**")
+    st.markdown("---")
+    
+    # Initialize retriever
+    retriever = initialize_retriever()
+    
+    # Show domains info in sidebar
+    st.sidebar.write("📊 **Available Domains:**")
+    domain_info = retriever.get_domain_info()
+    for domain, info in domain_info.items():
+        st.sidebar.write(f"- {domain.upper()}: {info['chunks']} chunks")
+    
+    # ============================================================
+    # STEP 1: DOMAIN SELECTION
+    # ============================================================
+    
+    st.subheader("1️⃣ Select a Domain")
+    
+    domain_options = {
+        "🍎 Apple Organization": "apple",
+        "🏥 Healthcare & Medicine": "healthcare"
+    }
+    
+    selected_domain_display = st.selectbox(
+        "What would you like to search?",
+        list(domain_options.keys()),
+        key="domain_select"
     )
     
-    # Main content area
-    st.markdown("### 💬 Ask a Question")
+    selected_domain = domain_options[selected_domain_display]
     
-    # Query input
-    query = st.text_input(
+    # Sample questions for each domain
+    sample_questions = {
+        "apple": [
+            "How is Apple organized?",
+            "What are Apple's three leadership characteristics?",
+            "Explain the iPhone portrait mode development process",
+            "Why did Steve Jobs change Apple's organization?"
+        ],
+        "healthcare": [
+            "What are the common symptoms of diabetes?",
+            "How is hypertension diagnosed?",
+            "What risk factors contribute to heart disease?",
+            "What are the treatment options for asthma?",
+            "Describe the diagnostic criteria for depression"
+        ]
+    }
+    
+    st.info(f"📌 Selected: **{selected_domain_display}**")
+    
+    # ============================================================
+    # STEP 2: API KEY CONFIGURATION
+    # ============================================================
+    
+    st.subheader("2️⃣ Configure LLM")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        llm_choice = st.selectbox(
+            "Select LLM Provider",
+            ["OpenAI", "Google Gemini", "Claude", "Ollama"],
+            key="llm_select"
+        )
+    
+    with col2:
+        if llm_choice != "Ollama":
+            api_key = st.text_input(f"{llm_choice} API Key", type="password", key="api_key_input")
+        else:
+            api_key = "ollama"
+            st.write("✅ Using local Ollama")
+    
+    # Check if API key provided
+    if llm_choice != "Ollama" and not api_key:
+        st.warning("⚠️ Please provide API key to proceed")
+        st.stop()
+    
+    # ============================================================
+    # STEP 3: QUESTION INPUT
+    # ============================================================
+    
+    st.subheader(f"3️⃣ Ask a Question ({selected_domain_display})")
+    
+    # Show sample questions
+    with st.expander("💡 Sample Questions"):
+        for sample in sample_questions[selected_domain]:
+            st.write(f"- {sample}")
+    
+    # Question input
+    question = st.text_input(
         "Enter your question:",
-        placeholder="e.g., How is Apple organized?"
+        placeholder=sample_questions[selected_domain][0],
+        key="question_input"
     )
     
-    if st.button("🔍 Search", use_container_width=True):
+    # ============================================================
+    # STEP 4: SEARCH & RETRIEVE (Hidden from user)
+    # ============================================================
+    
+    if question:
+        st.write("---")
         
-        if not query:
-            st.warning("Please enter a question!")
-            return
+        # Generate query embedding
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+        query_embedding = model.encode(question)
         
-        if llm_key != "ollama" and not api_key:
-            st.error(f"Please provide your {llm_type} API key!")
-            return
+        # Search only in selected domain
+        domain_data = retriever.domains.get(selected_domain)
         
-        try:
-            # Initialize LLM handler
-            with st.spinner("🔄 Initializing LLM..."):
-                llm_handler = LLMHandler(
-                    llm_type=llm_key,
-                    api_key=api_key,
-                    config_path="config.yaml"
-                )
-                
-                # Check connection
-                if not llm_handler.check_connection():
-                    if llm_key == "ollama":
-                        st.error("❌ Cannot connect to Ollama. Make sure it's running (`ollama serve`)")
-                    else:
-                        st.error(f"❌ Invalid {llm_type} API key")
-                    return
+        results = []
+        if domain_data:
+            index = domain_data['index']
+            chunks = domain_data['chunks']
             
-            # Retrieve chunks
-            with st.spinner("🔍 Retrieving relevant documents..."):
-                retrieved_chunks = retriever.retrieve(query)
+            query_vec = np.array([query_embedding], dtype=np.float32)
+            distances, indices = index.search(query_vec, min(5, len(chunks)))
             
-            if not retrieved_chunks:
-                st.warning("No relevant documents found!")
-                return
+            for dist, idx in zip(distances[0], indices[0]):
+                if idx != -1 and idx < len(chunks):
+                    results.append({
+                        'text': chunks[idx],
+                        'domain': selected_domain,
+                        'distance': float(dist),
+                        'similarity': 1 / (1 + float(dist))
+                    })
+        
+        # ============================================================
+        # STEP 5: GENERATE ANSWER WITH LLM
+        # ============================================================
+        
+        st.subheader("💬 Answer")
+        
+        if results:
+            # Combine retrieved documents as context
+            context = "\n\n".join([r['text'] for r in results])
             
-            # Create prompt
-            context = "\n\n".join([
-                f"[Chunk {chunk['chunk_id']}]\n{chunk['text']}"
-                for chunk in retrieved_chunks
-            ])
-            
-            prompt = f"""You are a helpful assistant. Answer the question based on the provided context.
+            # Create RAG prompt
+            prompt = f"""You are a helpful assistant. Based on the following documents, answer the user's question clearly and concisely.
 
-Context:
+Question: {question}
+
+Documents:
 {context}
-
-Question: {query}
 
 Answer:"""
             
-            # Generate answer
-            with st.spinner("🤖 Generating answer..."):
-                answer = llm_handler.generate_answer(prompt)
-            
-            if not answer:
-                st.error("❌ Failed to generate answer!")
-                return
-            
-            # Display results
-            st.markdown("---")
-            st.markdown("### 📊 Results")
-            
-            col1, col2 = st.columns([1, 1])
-            
-            with col1:
-                st.markdown("#### 📚 Retrieved Documents")
-                st.markdown(f"Found **{len(retrieved_chunks)} relevant chunks**")
-                
-                for chunk in retrieved_chunks:
-                    with st.expander(
-                        f"Chunk {chunk['chunk_id']} (Similarity: {chunk['similarity']})"
-                    ):
-                        st.write(chunk['text'])
-            
-            with col2:
-                st.markdown("#### 💬 Answer")
-                st.info(answer)
-            
-            # Display query info
-            st.markdown("---")
-            st.markdown("### ℹ️ Query Info")
-            col1, col2, col3 = st.columns(3)
-            col1.metric("LLM Provider", llm_type)
-            col2.metric("Retrieved Chunks", len(retrieved_chunks))
-            col3.metric("Top Similarity", retrieved_chunks[0]['similarity'])
+            # Generate answer button
+            if st.button("🔄 Generate Answer", key="answer_button"):
+                with st.spinner("⏳ Generating answer..."):
+                    try:
+                        if llm_choice == "OpenAI":
+                            from openai import OpenAI
+                            client = OpenAI(api_key=api_key)
+                            response = client.chat.completions.create(
+                                model="gpt-3.5-turbo",
+                                messages=[{"role": "user", "content": prompt}],
+                                temperature=0.7
+                            )
+                            answer = response.choices[0].message.content
+                        
+                        elif llm_choice == "Google Gemini":
+                            import google.generativeai as genai
+                            genai.configure(api_key=api_key)
+                            model_gemini = genai.GenerativeModel('gemini-2.5-pro')
+                            response = model_gemini.generate_content(prompt)
+                            answer = response.text
+                        
+                        elif llm_choice == "Claude":
+                            from anthropic import Anthropic
+                            client = Anthropic(api_key=api_key)
+                            response = client.messages.create(
+                                model="claude-3-5-sonnet-20241022",
+                                max_tokens=1024,
+                                messages=[{"role": "user", "content": prompt}]
+                            )
+                            answer = response.content[0].text
+                        
+                        # Display answer
+                        st.success("✅ Answer generated!")
+                        st.markdown(answer)
+                        
+                        
+                    
+                    except Exception as e:
+                        st.error(f"❌ Error: {str(e)}")
         
-        except Exception as e:
-            st.error(f"❌ Error: {str(e)}")
+        else:
+            st.warning("❌ No relevant documents found")
 
+# ============================================================
+# 5. RUN APP
+# ============================================================
 
 if __name__ == "__main__":
     main()
