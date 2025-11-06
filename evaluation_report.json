@@ -1,0 +1,17 @@
+{
+  "timestamp": "2025-11-05 21:39:07.220924",
+  "retrieval_metrics": {
+    "avg_precision@5": 0.175,
+    "avg_recall@5": 0.2396,
+    "avg_mrr": 0.3542,
+    "total_queries": 8
+  },
+  "answer_metrics": {
+    "avg_semantic_similarity": 0.7507,
+    "min_similarity": 0.6474,
+    "max_similarity": 0.9034,
+    "total_answers": 8
+  },
+  "test_cases_count": 8,
+  "llm_provider": "ollama"
+}

@@ -1,0 +1,68 @@
+{
+  "test_cases": [
+    {
+      "id": 1,
+      "question": "How is Apple organized?",
+      "expected_answer": "Apple is organized using a functional organization structure where senior vice presidents are in charge of functions, not products. This means experts lead experts in their respective domains like design, engineering, operations, marketing, and retail.",
+      "expected_chunks": [4, 5, 6, 7],
+      "difficulty": "easy",
+      "category": "structure"
+    },
+    {
+      "id": 2,
+      "question": "What is a functional organization?",
+      "expected_answer": "A functional organization is a structure where the company is organized around functions like design, engineering, operations, marketing, and retail rather than product-based divisions. Expertise aligns with decision rights.",
+      "expected_chunks": [3, 4, 8, 9],
+      "difficulty": "easy",
+      "category": "structure"
+    },
+    {
+      "id": 3,
+      "question": "Describe Apple's three leadership characteristics",
+      "expected_answer": "Apple's leaders must possess: 1) Deep expertise in their domain, 2) Immersion in the details of their functions, 3) Willingness to collaboratively debate other functions during decision-making. Leaders are expected to be experts who lead experts.",
+      "expected_chunks": [20, 21, 22, 23],
+      "difficulty": "medium",
+      "category": "leadership"
+    },
+    {
+      "id": 4,
+      "question": "What is the iPhone portrait mode example?",
+      "expected_answer": "Portrait mode is a feature developed through collaborative effort of 40+ specialist teams. It required intense debate about quality standards, corner cases, and user experience between camera teams and design teams to achieve the final product.",
+      "expected_chunks": [40, 41, 42, 43],
+      "difficulty": "medium",
+      "category": "collaboration"
+    },
+    {
+      "id": 5,
+      "question": "How does Apple balance cost and innovation?",
+      "expected_answer": "Apple uses individual and team reputation as a control mechanism. R&D leaders weigh benefits to users against cost considerations. Senior executive bonuses are based on company-wide performance rather than individual product costs, insulating product decisions from short-term financial pressures.",
+      "expected_chunks": [15, 16, 17, 18],
+      "difficulty": "hard",
+      "category": "innovation"
+    },
+    {
+      "id": 6,
+      "question": "What is the discretionary leadership model?",
+      "expected_answer": "The discretionary leadership model allows leaders to choose where to spend their time based on impact. Leaders allocate efforts to: Owning (high expertise areas), Teaching (core expertise), Learning (new areas), and Delegating (low expertise areas).",
+      "expected_chunks": [55, 56, 57, 58],
+      "difficulty": "hard",
+      "category": "leadership"
+    },
+    {
+      "id": 7,
+      "question": "Why did Steve Jobs change Apple's organization?",
+      "expected_answer": "When Steve Jobs returned to Apple, he changed from a conventional business unit structure to a functional organization. He believed conventional management had stifled innovation, so he laid off general managers and combined disparate departments into one functional organization.",
+      "expected_chunks": [1, 2, 3],
+      "difficulty": "medium",
+      "category": "history"
+    },
+    {
+      "id": 8,
+      "question": "What are the benefits of experts leading experts?",
+      "expected_answer": "Experts leading experts creates a deep bench in specialized areas where specialists can learn from one another. This creates stronger collective expertise, better problem-solving, and stronger ability to generate and refine innovations.",
+      "expected_chunks": [24, 25, 26],
+      "difficulty": "medium",
+      "category": "leadership"
+    }
+  ]
+}

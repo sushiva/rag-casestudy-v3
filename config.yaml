@@ -1,0 +1,57 @@
+# Version 2: Multi-document support
+documents:
+  apple:
+    path: "data/apple/HBR_How_Apple_Is_Organized_For_Innovation-4.pdf"
+    extracted_text: "data/apple/extracted_text.txt"
+    chunks: "data/apple/chunks.json"
+    
+  healthcare:
+    path: "data/healthcare/medical_diagnosis_manual.pdf"
+    extracted_text: "data/healthcare/extracted_text.txt"
+    chunks: "data/healthcare/chunks.json"
+
+# Combined embeddings and index
+embeddings:
+  path: "data/combined/embeddings.json"
+  
+retrieval:
+  index_path: "data/combined/faiss_index.bin"
+  top_k: 5
+
+# PDF Configuration
+pdf:
+  input_path: "data/HBR_How_Apple_Is_Organized_For_Innovation-4.pdf"
+  output_path: "data/extracted_text.txt"
+
+# Text Chunking Configuration
+chunking:
+  input_file: "data/extracted_text.txt"
+  output_file: "data/chunks.json"
+  chunk_size: 500
+  chunk_overlap: 50
+
+# Embedding Configuration
+embeddings:
+  input_file: "data/chunks.json"
+  output_file: "data/embeddings.json"
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+
+# FAISS Vector Database Configuration
+vector_db:
+  embeddings_file: "data/embeddings.json"
+  index_path: "data/faiss_index.bin"
+  metadata_path: "data/metadata.json"
+
+# Retrieval Configuration
+retrieval:
+  index_path: "data/faiss_index.bin"
+  metadata_path: "data/metadata.json"
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  top_k: 5
+
+# LLM Configuration
+llm:
+  ollama:
+    api_url: "http://localhost:11434"
+    model: "llama3.2:1b"
+    temperature: 0.7
