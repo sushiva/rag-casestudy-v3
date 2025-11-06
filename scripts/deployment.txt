@@ -1,0 +1,15 @@
+# For v3
+python scripts/deploy_to_hf.py \
+  --username iamaiami \
+  --space rag-case-study-v3
+
+# For v4 (future)
+python scripts/deploy_to_hf.py \
+  --username iamaiami \
+  --space rag-case-study-v4
+
+# With custom exclusions
+python scripts/deploy_to_hf.py \
+  --username iamaiami \
+  --space rag-case-study-v3 \
+  --exclude data chroma_db .env

@@ -236,3 +236,48 @@ For issues or questions, please open an issue on GitHub.
 ---
 
 **Made with ❤️ for learning RAG systems**
+## 🚀 Deployment
+
+### HuggingFace Spaces
+
+Deploy to HuggingFace Spaces with one command:
+```bash
+python scripts/deployment/huggingface/deploy.py \
+  --username YOUR_HF_USERNAME \
+  --space YOUR_SPACE_NAME
+```
+
+See [Deployment Guide](scripts/deployment/huggingface/README.md) for details.
+
+### Multiple Platforms
+
+Future deployments available:
+- 🐳 Docker
+- ☁️ AWS
+- 🔧 Custom Server
+
+Check [Deployment Folder](scripts/deployment/) for more options.
+
+
+## 🚀 Deployment
+
+### HuggingFace Spaces
+
+Deploy to HuggingFace Spaces with one command:
+```bash
+python scripts/deployment/huggingface/deploy.py \
+  --username YOUR_HF_USERNAME \
+  --space YOUR_SPACE_NAME
+```
+
+See [Deployment Guide](scripts/deployment/huggingface/README.md) for details.
+
+### Multiple Platforms
+
+Future deployments available:
+- 🐳 Docker
+- ☁️ AWS
+- 🔧 Custom Server
+
+Check [Deployment Folder](scripts/deployment/) for more options.
+
