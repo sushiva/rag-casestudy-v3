@@ -1,21 +1,10 @@
-# Web UI
 streamlit>=1.28.0
-
-# LangChain RAG - let pip resolve
 langchain
 langchain-community
 langchain-openai
-langchain-google-genai
 langchain-pinecone
-
-# Vector DB
 pinecone-client
-
-# LLM APIs
 openai
-google-generativeai
 anthropic
-
-# Utilities
 python-dotenv
 PyYAML

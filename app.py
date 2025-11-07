@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Healthcare RAG Assistant v3 - LangChain + Chroma
+Healthcare RAG Assistant v3 - LangChain + PineCone
 """
 
 import streamlit as st
@@ -50,7 +50,7 @@ def main():
     with col1:
         llm_provider = st.selectbox(
             "Select LLM",
-            ["OpenAI", "Google Gemini", "Claude"]
+            ["OpenAI", "Claude"]
         )
     
     with col2:

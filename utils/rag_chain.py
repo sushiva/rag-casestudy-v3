@@ -5,7 +5,6 @@ from pinecone import Pinecone
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
 from anthropic import Anthropic
 import os
 
@@ -20,7 +19,7 @@ class HealthcareRAG:
         self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
         self.index = self.pc.Index("healthcare")
         
-        # Initialize embeddings using OpenAI (lightweight!)
+        # Initialize embeddings using OpenAI
         self.embeddings = OpenAIEmbeddings()
         
         # Create vector store
@@ -54,24 +53,6 @@ Answer:"""
         response = llm.invoke(prompt)
         return response.content
     
-    def query_gemini(self, question: str, api_key: str, top_k: int = 5):
-        """Query using Google Gemini"""
-        results = self.retrieve(question, top_k)
-        context = "\n\n".join([doc.page_content for doc, _ in results])
-        
-        prompt = f"""You are a healthcare assistant. Based on the following medical information, answer the question clearly and accurately.
-
-Medical Information:
-{context}
-
-Question: {question}
-
-Answer:"""
-        
-        llm = ChatGoogleGenerativeAI(google_api_key=api_key, model="gemini-pro", temperature=0.7)
-        response = llm.invoke(prompt)
-        return response.content
-    
     def query_claude(self, question: str, api_key: str, top_k: int = 5):
         """Query using Claude"""
         results = self.retrieve(question, top_k)
@@ -98,8 +79,6 @@ Answer:"""
         """Query the RAG system"""
         if llm_provider == "OpenAI":
             return self.query_openai(question, api_key)
-        elif llm_provider == "Google Gemini":
-            return self.query_gemini(question, api_key)
         elif llm_provider == "Claude":
             return self.query_claude(question, api_key)
         else:
