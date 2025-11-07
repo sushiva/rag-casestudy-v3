@@ -12,32 +12,34 @@ class HealthcareRAG:
     """Healthcare RAG using Pinecone (serverless)"""
     
     def __init__(self):
-        """Initialize with Pinecone"""
+        """Initialize with Pinecone (no API key needed)"""
         print("🔄 Initializing Healthcare RAG with Pinecone...")
         
-        # Initialize Pinecone
+        # Initialize Pinecone (uses PINECONE_API_KEY env var)
         self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
         self.index = self.pc.Index("healthcare")
         
-        # Initialize embeddings using OpenAI
-        self.embeddings = OpenAIEmbeddings()
-        
-        # Create vector store
-        self.vectorstore = PineconeVectorStore(
-            index=self.index,
-            embedding=self.embeddings
-        )
-        
+        self.vectorstore = None  # Lazy initialized
         print("✅ RAG initialized with Pinecone!")
     
-    def retrieve(self, query: str, top_k: int = 5):
+    def _ensure_vectorstore(self, openai_api_key: str):
+        """Lazily initialize vectorstore with OpenAI API key"""
+        if self.vectorstore is None:
+            embeddings = OpenAIEmbeddings(api_key=openai_api_key)
+            self.vectorstore = PineconeVectorStore(
+                index=self.index,
+                embedding=embeddings
+            )
+    
+    def retrieve(self, query: str, openai_api_key: str, top_k: int = 5):
         """Retrieve relevant documents"""
+        self._ensure_vectorstore(openai_api_key)
         results = self.vectorstore.similarity_search_with_score(query, k=top_k)
         return results
     
     def query_openai(self, question: str, api_key: str, top_k: int = 5):
         """Query using OpenAI"""
-        results = self.retrieve(question, top_k)
+        results = self.retrieve(question, api_key, top_k)
         context = "\n\n".join([doc.page_content for doc, _ in results])
         
         prompt = f"""You are a healthcare assistant. Based on the following medical information, answer the question clearly and accurately.
@@ -55,7 +57,12 @@ Answer:"""
     
     def query_claude(self, question: str, api_key: str, top_k: int = 5):
         """Query using Claude"""
-        results = self.retrieve(question, top_k)
+        # Claude needs OpenAI key for embeddings retrieval
+        openai_key = os.getenv("OPENAI_API_KEY")
+        if not openai_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+        
+        results = self.retrieve(question, openai_key, top_k)
         context = "\n\n".join([doc.page_content for doc, _ in results])
         
         prompt = f"""You are a healthcare assistant. Based on the following medical information, answer the question clearly and accurately.
