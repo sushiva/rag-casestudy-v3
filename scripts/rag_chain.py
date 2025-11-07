@@ -1,49 +1,48 @@
-
 #!/usr/bin/env python3
-"""
-LangChain RAG Pipeline for Healthcare
-"""
+"""LangChain RAG Pipeline with Pinecone (Serverless)"""
 
-from langchain_community.vectorstores import Chroma
+from pinecone import Pinecone
+from langchain_community.vectorstores import PineconeVectorStore
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from anthropic import Anthropic
+import os
 
 class HealthcareRAG:
-    """Healthcare RAG system using LangChain + Chroma"""
+    """Healthcare RAG using Pinecone (serverless)"""
     
-    def __init__(self, persist_directory: str = "data/chroma_db"):
-        """Initialize RAG with Chroma DB"""
-        print("🔄 Initializing Healthcare RAG...")
+    def __init__(self):
+        """Initialize with Pinecone"""
+        print("🔄 Initializing Healthcare RAG with Pinecone...")
         
-        # Load embeddings
+        # Initialize Pinecone
+        self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+        self.index = self.pc.Index("healthcare")
+        
+        # Initialize embeddings
         self.embeddings = HuggingFaceEmbeddings(
             model_name="all-MiniLM-L6-v2"
         )
         
-        # Load Chroma DB
-        self.db = Chroma(
-            persist_directory=persist_directory,
-            embedding_function=self.embeddings,
-            collection_name="healthcare"
+        # Create vector store
+        self.vectorstore = PineconeVectorStore(
+            index=self.index,
+            embedding=self.embeddings
         )
         
-        print(f"✅ RAG initialized with Chroma DB")
+        print("✅ RAG initialized with Pinecone!")
     
     def retrieve(self, query: str, top_k: int = 5):
         """Retrieve relevant documents"""
-        results = self.db.similarity_search_with_score(query, k=top_k)
+        results = self.vectorstore.similarity_search_with_score(query, k=top_k)
         return results
     
     def query_openai(self, question: str, api_key: str, top_k: int = 5):
         """Query using OpenAI"""
-        # Retrieve context
         results = self.retrieve(question, top_k)
         context = "\n\n".join([doc.page_content for doc, _ in results])
         
-        # Create prompt
         prompt = f"""You are a healthcare assistant. Based on the following medical information, answer the question clearly and accurately.
 
 Medical Information:
@@ -53,19 +52,15 @@ Question: {question}
 
 Answer:"""
         
-        # Call OpenAI
         llm = ChatOpenAI(api_key=api_key, model="gpt-3.5-turbo", temperature=0.7)
         response = llm.invoke(prompt)
-        
         return response.content
     
     def query_gemini(self, question: str, api_key: str, top_k: int = 5):
         """Query using Google Gemini"""
-        # Retrieve context
         results = self.retrieve(question, top_k)
         context = "\n\n".join([doc.page_content for doc, _ in results])
         
-        # Create prompt
         prompt = f"""You are a healthcare assistant. Based on the following medical information, answer the question clearly and accurately.
 
 Medical Information:
@@ -75,19 +70,15 @@ Question: {question}
 
 Answer:"""
         
-        # Call Gemini
-        llm = ChatGoogleGenerativeAI(google_api_key=api_key, model="gemini-2.5-flash", temperature=0.7)
+        llm = ChatGoogleGenerativeAI(google_api_key=api_key, model="gemini-pro", temperature=0.7)
         response = llm.invoke(prompt)
-        
         return response.content
     
     def query_claude(self, question: str, api_key: str, top_k: int = 5):
         """Query using Claude"""
-        # Retrieve context
         results = self.retrieve(question, top_k)
         context = "\n\n".join([doc.page_content for doc, _ in results])
         
-        # Create prompt
         prompt = f"""You are a healthcare assistant. Based on the following medical information, answer the question clearly and accurately.
 
 Medical Information:
@@ -97,28 +88,16 @@ Question: {question}
 
 Answer:"""
         
-        # Call Claude
         client = Anthropic(api_key=api_key)
         response = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}]
         )
-        
         return response.content[0].text
     
     def query(self, question: str, llm_provider: str, api_key: str):
-        """
-        Query the RAG system
-        
-        Args:
-            question: User's question
-            llm_provider: "openai", "gemini", or "claude"
-            api_key: API key for the provider
-        
-        Returns:
-            Answer from LLM
-        """
+        """Query the RAG system"""
         if llm_provider == "OpenAI":
             return self.query_openai(question, api_key)
         elif llm_provider == "Google Gemini":
