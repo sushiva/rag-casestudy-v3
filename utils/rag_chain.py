@@ -98,7 +98,7 @@ Answer:"""
         
         client = Anthropic(api_key=api_key)
         response = client.messages.create(
-            model="claude-3-sonnet",
+            model="claude-sonnet-4-5",
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}]
         )
