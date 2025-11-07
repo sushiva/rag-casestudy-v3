@@ -33,7 +33,7 @@ def main():
     """Main app"""
     
     st.title("🏥 Healthcare RAG Assistant v3")
-    st.markdown("**LangChain + Chroma - Medical Knowledge Base**")
+    st.markdown("**LangChain + Pinecone - Medical Knowledge Base**")
     st.markdown("---")
     
     # Initialize RAG
