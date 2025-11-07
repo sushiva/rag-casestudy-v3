@@ -1,20 +1,20 @@
 # Web UI
 streamlit>=1.28.0
 
-# LangChain RAG - pin compatible versions
-langchain==0.1.17
-langchain-community==0.0.38
-langchain-core==0.1.48
-langchain-openai==0.1.14
-langchain-pinecone==0.1.1
+# LangChain RAG - let pip resolve
+langchain
+langchain-community
+langchain-openai
+langchain-google-genai
+langchain-pinecone
 
 # Vector DB
-pinecone-client>=3.0.0
+pinecone-client
 
 # LLM APIs
-openai>=1.3.0
-google-generativeai>=0.3.0
-anthropic>=0.7.0
+openai
+google-generativeai
+anthropic
 
 # Utilities
 python-dotenv
