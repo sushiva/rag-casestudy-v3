@@ -3,7 +3,7 @@
 
 from pinecone import Pinecone
 from langchain_pinecone import PineconeVectorStore
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from anthropic import Anthropic
@@ -20,10 +20,8 @@ class HealthcareRAG:
         self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
         self.index = self.pc.Index("healthcare")
         
-        # Initialize embeddings
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="all-MiniLM-L6-v2"
-        )
+        # Initialize embeddings using OpenAI (lightweight!)
+        self.embeddings = OpenAIEmbeddings()
         
         # Create vector store
         self.vectorstore = PineconeVectorStore(
