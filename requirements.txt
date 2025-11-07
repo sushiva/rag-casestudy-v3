@@ -8,3 +8,4 @@ openai
 anthropic
 python-dotenv
 PyYAML
+google-generativeai
