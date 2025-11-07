@@ -50,7 +50,7 @@ def main():
     with col1:
         llm_provider = st.selectbox(
             "Select LLM",
-            ["OpenAI", "Claude"]
+            ["OpenAI", "Google Gemini", "Claude"]
         )
     
     with col2:

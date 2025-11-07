@@ -3,9 +3,9 @@
 
 from pinecone import Pinecone
 from langchain_pinecone import PineconeVectorStore
-from langchain_openai import OpenAIEmbeddings
-from langchain_openai import ChatOpenAI
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from anthropic import Anthropic
+import google.generativeai as genai
 import os
 
 class HealthcareRAG:
@@ -15,11 +15,11 @@ class HealthcareRAG:
         """Initialize with Pinecone (no API key needed)"""
         print("🔄 Initializing Healthcare RAG with Pinecone...")
         
-        # Initialize Pinecone (uses PINECONE_API_KEY env var)
+        # Initialize Pinecone
         self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
         self.index = self.pc.Index("healthcare")
         
-        self.vectorstore = None  # Lazy initialized
+        self.vectorstore = None
         print("✅ RAG initialized with Pinecone!")
     
     def _ensure_vectorstore(self, openai_api_key: str):
@@ -55,9 +55,31 @@ Answer:"""
         response = llm.invoke(prompt)
         return response.content
     
+    def query_gemini(self, question: str, api_key: str, top_k: int = 5):
+        """Query using Google Gemini"""
+        openai_key = os.getenv("OPENAI_API_KEY")
+        if not openai_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+        
+        results = self.retrieve(question, openai_key, top_k)
+        context = "\n\n".join([doc.page_content for doc, _ in results])
+        
+        prompt = f"""You are a healthcare assistant. Based on the following medical information, answer the question clearly and accurately.
+
+Medical Information:
+{context}
+
+Question: {question}
+
+Answer:"""
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-pro')
+        response = model.generate_content(prompt)
+        return response.text
+    
     def query_claude(self, question: str, api_key: str, top_k: int = 5):
         """Query using Claude"""
-        # Claude needs OpenAI key for embeddings retrieval
         openai_key = os.getenv("OPENAI_API_KEY")
         if not openai_key:
             raise ValueError("OPENAI_API_KEY environment variable not set")
@@ -86,6 +108,8 @@ Answer:"""
         """Query the RAG system"""
         if llm_provider == "OpenAI":
             return self.query_openai(question, api_key)
+        elif llm_provider == "Google Gemini":
+            return self.query_gemini(question, api_key)
         elif llm_provider == "Claude":
             return self.query_claude(question, api_key)
         else:
